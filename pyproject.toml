@@ -1,0 +1,8 @@
+[project]
+name = "usj-http-project-base"
+version = "0.1.0"
+description = "Base Python for USJ HTTP project"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
