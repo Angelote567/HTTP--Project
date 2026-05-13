@@ -13,10 +13,33 @@ asignatura de Redes y Comunicaciones.
 python -m usj_http.server --host 127.0.0.1 --port 8080
 ```
 
+Argumentos disponibles:
+
+| Flag             | Descripción                                                                            | Variable de entorno alternativa |
+|------------------|----------------------------------------------------------------------------------------|---------------------------------|
+| `--host`         | Host de escucha (por defecto `127.0.0.1`).                                             | —                               |
+| `--port`         | Puerto de escucha (por defecto `8080`).                                                | —                               |
+| `--api-key`      | API key opcional. Si se define, las rutas no públicas requieren el header `X-API-Key`. | `USJ_HTTP_API_KEY`              |
+
+## Ejecutar el cliente
+
+Modo CLI directo:
+
+```bash
+python -m usj_http.client --url http://127.0.0.1:8080/cats
+```
+
+Modo interactivo (mantiene la cookie jar entre peticiones):
+
+```bash
+python -m usj_http.client --interactive
+```
+
 ## Endpoints
 
 | Método | Ruta                       | Descripción                                       |
 |--------|----------------------------|---------------------------------------------------|
+| GET    | `/` y `/index.html`        | Página estática.                                  |
 | GET    | `/cats`                    | Lista de gatos.                                   |
 | POST   | `/cats`                    | Alta de gato (admite `owner_id`).                 |
 | GET    | `/cats/:id`                | Obtener gato.                                     |
@@ -28,7 +51,9 @@ python -m usj_http.server --host 127.0.0.1 --port 8080
 | PUT    | `/owners/:id`              | Modificar owner.                                  |
 | DELETE | `/owners/:id`              | Borrar owner. Borra también sus gatos en cascada. |
 | GET    | `/owners/:id/cats`         | Listar gatos del owner.                           |
+| GET    | `/session`                 | Crea/incrementa una sesión vía cookies.           |
+| DELETE | `/session`                 | Cierra la sesión y expira la cookie.              |
 
 ## Estado
 
-En desarrollo. Cliente, autenticación, cookies, middleware y tests se irán añadiendo.
+En desarrollo. Quedan por añadir middleware/interceptores, logging y tests automáticos.

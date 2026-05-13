@@ -1,24 +1,42 @@
-"""Servidor HTTP/1.1 básico construido sobre sockets TCP.
-
-Versión inicial con CRUD en memoria para gatos y owners.
-"""
+"""Servidor HTTP/1.1 básico construido sobre sockets TCP."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import mimetypes
+import os
 import re
+import secrets
 import socketserver
+import time
+from pathlib import Path
 from typing import Optional
 from urllib.parse import urlsplit
 
-from .http_messages import HTTPParseError, make_json_response
+from .auth import check_api_key
+from .cookies import add_set_cookie, format_set_cookie, parse_request_cookies
+from .http_messages import (
+    HTTP_REASONS,
+    HTTPParseError,
+    Response,
+    make_json_response,
+)
 from .parser import parse_request, recv_http_message
 from .store import CatStore, OwnerStore
 
 
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+PUBLIC_PATHS = {"/", "/index.html"}
+SESSION_COOKIE = "usj_session"
+
 CAT_STORE = CatStore()
 OWNER_STORE = OwnerStore()
+SESSIONS: dict[str, dict] = {}
+
+# Configurado por main()
+API_KEY: Optional[str] = None
 
 
 class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -31,12 +49,12 @@ class HTTPHandler(socketserver.BaseRequestHandler):
         try:
             raw_request = recv_http_message(self.request)
             request = parse_request(raw_request)
-            response = dispatch(
-                request.method,
-                urlsplit(request.target).path,
-                request.headers,
-                request.body,
-            )
+            path = urlsplit(request.target).path
+            unauthorized = check_api_key(request.headers, path, API_KEY, PUBLIC_PATHS)
+            if unauthorized is not None:
+                response = unauthorized
+            else:
+                response = dispatch(request.method, path, request.headers, request.body)
         except HTTPParseError as exc:
             response = make_json_response(400, {"error": str(exc)})
         except Exception as exc:  # pragma: no cover
@@ -44,7 +62,12 @@ class HTTPHandler(socketserver.BaseRequestHandler):
         self.request.sendall(response.to_bytes())
 
 
-def dispatch(method: str, path: str, headers: dict, body: bytes):
+def dispatch(method: str, path: str, headers: dict, body: bytes) -> Response:
+    if path in {"/", "/index.html"}:
+        if method != "GET":
+            return method_not_allowed(["GET"])
+        return tag_visit(serve_static("index.html"), headers)
+
     if path == "/cats":
         if method == "GET":
             return make_json_response(200, {"items": CAT_STORE.list_all()})
@@ -117,7 +140,68 @@ def dispatch(method: str, path: str, headers: dict, body: bytes):
             return make_json_response(204, None)
         return method_not_allowed(["GET", "PUT", "DELETE"])
 
+    if path == "/session":
+        return handle_session(method, headers)
+
     return make_json_response(404, {"error": "Ruta no encontrada"})
+
+
+def handle_session(method: str, headers: dict) -> Response:
+    cookies = parse_request_cookies(headers.get("Cookie"))
+    session_id = cookies.get(SESSION_COOKIE)
+    if method == "GET":
+        session = SESSIONS.get(session_id) if session_id else None
+        if session is None:
+            response = make_json_response(200, {"visits": 0})
+            new_id = secrets.token_hex(16)
+            SESSIONS[new_id] = {"visits": 1, "created_at": time.time()}
+            add_set_cookie(
+                response,
+                format_set_cookie(SESSION_COOKIE, new_id, max_age=3600, path="/"),
+            )
+            return response
+        session["visits"] = session.get("visits", 0) + 1
+        return make_json_response(200, {"visits": session["visits"]})
+    if method == "DELETE":
+        if session_id and session_id in SESSIONS:
+            SESSIONS.pop(session_id, None)
+        response = make_json_response(204, None)
+        add_set_cookie(
+            response,
+            format_set_cookie(SESSION_COOKIE, "", max_age=0, path="/"),
+        )
+        return response
+    return method_not_allowed(["GET", "DELETE"])
+
+
+def tag_visit(response: Response, headers: dict) -> Response:
+    cookies = parse_request_cookies(headers.get("Cookie"))
+    if "first_visit" not in cookies:
+        add_set_cookie(
+            response,
+            format_set_cookie(
+                "first_visit",
+                str(int(time.time())),
+                max_age=7 * 24 * 3600,
+                path="/",
+            ),
+        )
+    return response
+
+
+def serve_static(filename: str) -> Response:
+    path = STATIC_DIR / filename
+    if not path.exists() or not path.is_file():
+        return make_json_response(404, {"error": "Fichero estático no encontrado"})
+    body = path.read_bytes()
+    content_type, _ = mimetypes.guess_type(str(path))
+    headers = {
+        "Server": "USJPythonHTTP/1.0",
+        "Connection": "close",
+        "Content-Type": content_type or "application/octet-stream",
+        "Content-Length": str(len(body)),
+    }
+    return Response("HTTP/1.1", 200, HTTP_REASONS[200], headers, body)
 
 
 def parse_json_body(headers: dict, body: bytes) -> dict:
@@ -174,20 +258,29 @@ def parse_resource_id(path: str, prefix: str) -> Optional[int]:
         return None
 
 
-def method_not_allowed(allowed_methods: list[str]):
+def method_not_allowed(allowed_methods: list[str]) -> Response:
     response = make_json_response(405, {"error": "Método no permitido"})
     response.headers["Allow"] = ", ".join(allowed_methods)
     return response
 
 
 def main() -> None:
+    global API_KEY
     parser = argparse.ArgumentParser(description="Servidor HTTP/1.1 básico con sockets TCP")
     parser.add_argument("--host", default="127.0.0.1", help="Host de escucha")
     parser.add_argument("--port", type=int, default=8080, help="Puerto de escucha")
+    parser.add_argument(
+        "--api-key",
+        default=os.environ.get("USJ_HTTP_API_KEY"),
+        help="API key requerida para peticiones (opcional). También por env USJ_HTTP_API_KEY.",
+    )
     args = parser.parse_args()
+    API_KEY = args.api_key
 
     with ThreadingTCPServer((args.host, args.port), HTTPHandler) as server:
         print(f"Servidor escuchando en http://{args.host}:{args.port}")
+        if API_KEY:
+            print("API key requerida en cabecera X-API-Key")
         try:
             server.serve_forever()
         except KeyboardInterrupt:
