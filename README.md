@@ -3,9 +3,18 @@
 Implementación desde cero (solo sockets TCP) de cliente y servidor HTTP/1.1 para la
 asignatura de Redes y Comunicaciones.
 
+## Equipo
+
+- Ángel (@Angelote567)
+- Blanca
+- Sergio
+- Jorge
+- Mario
+
 ## Requisitos
 
 - Python 3.11+
+- `pytest` para ejecutar los tests automáticos.
 
 ## Ejecutar el servidor
 
@@ -20,6 +29,8 @@ Argumentos disponibles:
 | `--host`         | Host de escucha (por defecto `127.0.0.1`).                                             | —                               |
 | `--port`         | Puerto de escucha (por defecto `8080`).                                                | —                               |
 | `--api-key`      | API key opcional. Si se define, las rutas no públicas requieren el header `X-API-Key`. | `USJ_HTTP_API_KEY`              |
+| `--log-file`     | Ruta del fichero de log (por defecto `logs/server.log`).                               | `USJ_HTTP_LOG_FILE`             |
+| `--log-level`    | Nivel de log (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                                    | `USJ_HTTP_LOG_LEVEL`            |
 
 ## Ejecutar el cliente
 
@@ -54,6 +65,16 @@ python -m usj_http.client --interactive
 | GET    | `/session`                 | Crea/incrementa una sesión vía cookies.           |
 | DELETE | `/session`                 | Cierra la sesión y expira la cookie.              |
 
+## Tests automáticos
+
+```bash
+python -m pytest
+```
+
+Cubren CRUD básico, recursos anidados, validación, status codes, cookies, API key y la
+cadena de middleware. Cada test arranca un servidor real en un puerto libre y le ataca con
+el cliente HTTP del propio proyecto.
+
 ## Estado
 
-En desarrollo. Quedan por añadir middleware/interceptores, logging y tests automáticos.
+Falta el despliegue real (Docker, VPS, Fly.io) para mañana.
