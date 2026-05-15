@@ -70,9 +70,32 @@ python -m usj_http.client \
   --api-key clave-super-secreta
 ```
 
+## Despliegue real en Railway (producción)
+
+El servidor está desplegado de forma permanente en [Railway](https://railway.app),
+que detecta el `Dockerfile` del repositorio y construye la imagen automáticamente en
+cada push a `main`. Railway expone el puerto del contenedor sobre HTTPS y asigna una
+URL pública estable:
+
+**https://http-project-production.up.railway.app**
+
+Pasos seguidos:
+
+1. Crear un proyecto en Railway y enlazarlo al repositorio de GitHub.
+2. Railway detecta el `Dockerfile` y construye la imagen (no hace falta configuración extra).
+3. (Opcional) Definir la variable `USJ_HTTP_API_KEY` en el panel de variables del servicio.
+4. Cada `git push` a `main` redespliega automáticamente.
+
 ## Comprobación
 
-Una vez en marcha:
+Contra el despliegue real en producción:
+
+```bash
+curl https://http-project-production.up.railway.app/index.html
+curl https://http-project-production.up.railway.app/cats
+```
+
+O contra una instancia local:
 
 ```bash
 curl http://<host>:8080/index.html

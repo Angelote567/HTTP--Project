@@ -118,8 +118,23 @@ HTTP del propio proyecto.
 
 ## Despliegue
 
-Ver [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Incluye `Dockerfile`, instrucciones para VPS con
-`systemd` y un ejemplo en Fly.io.
+El servidor está desplegado en producción y accesible públicamente en:
+
+**https://http-project-production.up.railway.app**
+
+```bash
+# Página estática en producción
+curl https://http-project-production.up.railway.app/
+
+# API REST en producción
+curl https://http-project-production.up.railway.app/cats
+
+# Desde el propio cliente del proyecto
+python -m usj_http.client --url https://http-project-production.up.railway.app/cats
+```
+
+Ver [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) para el detalle. Incluye `Dockerfile`,
+despliegue real en Railway, instrucciones para VPS con `systemd` y un ejemplo en Fly.io.
 
 ```bash
 docker build -t usj-http .
