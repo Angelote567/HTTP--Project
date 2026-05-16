@@ -21,7 +21,7 @@ def api_key_middleware(
             return next_handler(ctx)
         provided = ctx.headers.get(API_KEY_HEADER) or ctx.headers.get(API_KEY_HEADER.lower())
         if provided != expected_key:
-            response = make_json_response(401, {"error": "API key inválida o ausente"})
+            response = make_json_response(401, {"error": "Invalid or missing API key"})
             response.headers["WWW-Authenticate"] = f'ApiKey header="{API_KEY_HEADER}"'
             return response
         ctx.state["authenticated"] = True

@@ -63,11 +63,11 @@ def test_middleware_can_short_circuit():
 
 def test_middleware_can_mutate_state():
     def tag(ctx, nxt):
-        ctx.state["user"] = "ángel"
+        ctx.state["user"] = "alice"
         return nxt(ctx)
 
     def handler(ctx):
-        assert ctx.state["user"] == "ángel"
+        assert ctx.state["user"] == "alice"
         return make_json_response(200, None)
 
     chain = MiddlewareChain()

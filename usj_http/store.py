@@ -55,8 +55,8 @@ class OwnerStore:
     def __init__(self) -> None:
         self._lock = Lock()
         self._items: Dict[int, dict] = {
-            1: {"id": 1, "name": "Ángel", "email": "angel@example.com"},
-            2: {"id": 2, "name": "Marta", "email": "marta@example.com"},
+            1: {"id": 1, "name": "Alice", "email": "alice@example.com"},
+            2: {"id": 2, "name": "Bob", "email": "bob@example.com"},
         }
         self._next_id = 3
 

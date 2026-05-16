@@ -88,10 +88,10 @@ def make_text_response(status_code: int, text: str, content_type: str = "text/pl
 def parse_url(url: str) -> tuple[str, int, str]:
     parts = urlsplit(url)
     if parts.scheme.lower() != "http":
-        raise ValueError("Solo se soporta el esquema http:// en esta base obligatoria.")
+        raise ValueError("Only the http:// scheme is supported in this base implementation.")
     host = parts.hostname
     if not host:
-        raise ValueError("La URL debe incluir host.")
+        raise ValueError("The URL must include a host.")
     port = parts.port or 80
     path = parts.path or "/"
     if parts.query:

@@ -1,25 +1,25 @@
-# Despliegue del servidor
+# Server deployment
 
-Este documento describe cómo desplegar el servidor HTTP de USJ en una máquina pública.
+This document describes how to deploy the USJ HTTP server on a public machine.
 
-## Imagen Docker
+## Docker image
 
 ```bash
 docker build -t usj-http .
 docker run --rm -p 8080:8080 \
-  -e USJ_HTTP_API_KEY=clave-super-secreta \
+  -e USJ_HTTP_API_KEY=super-secret-key \
   -v "$(pwd)/logs:/app/logs" \
   usj-http
 ```
 
-El contenedor expone el puerto 8080 y escribe los logs en `/app/logs/server.log`,
-que en el ejemplo se monta sobre `./logs` del host.
+The container exposes port 8080 and writes logs to `/app/logs/server.log`, which in this
+example is mounted onto `./logs` on the host.
 
-## Despliegue en una VPS (Ubuntu / Debian)
+## Deployment on a VPS (Ubuntu / Debian)
 
-1. Instalar Python 3.11+ y git: `sudo apt install -y python3 python3-pip git`.
-2. Clonar el repositorio del proyecto.
-3. Ejecutar el servidor:
+1. Install Python 3.11+ and git: `sudo apt install -y python3 python3-pip git`.
+2. Clone the project repository.
+3. Run the server:
 
    ```bash
    python3 -m usj_http.server \
@@ -29,7 +29,7 @@ que en el ejemplo se monta sobre `./logs` del host.
      --api-key "$(openssl rand -hex 16)"
    ```
 
-4. Crear un servicio `systemd` en `/etc/systemd/system/usj-http.service`:
+4. Create a `systemd` service at `/etc/systemd/system/usj-http.service`:
 
    ```ini
    [Unit]
@@ -39,7 +39,7 @@ que en el ejemplo se monta sobre `./logs` del host.
    [Service]
    Type=simple
    WorkingDirectory=/opt/usj_http_project_base
-   Environment=USJ_HTTP_API_KEY=clave-super-secreta
+   Environment=USJ_HTTP_API_KEY=super-secret-key
    Environment=USJ_HTTP_LOG_FILE=/var/log/usj-http/server.log
    ExecStart=/usr/bin/python3 -m usj_http.server --host 0.0.0.0 --port 8080
    Restart=on-failure
@@ -49,57 +49,56 @@ que en el ejemplo se monta sobre `./logs` del host.
    WantedBy=multi-user.target
    ```
 
-5. Habilitar e iniciar: `sudo systemctl enable --now usj-http`.
+5. Enable and start: `sudo systemctl enable --now usj-http`.
 
-## Despliegue serverless (Fly.io)
+## Serverless deployment (Fly.io)
 
-Fly.io acepta el `Dockerfile` directamente.
+Fly.io accepts the `Dockerfile` directly.
 
 ```bash
 fly launch --copy-config --no-deploy
-fly secrets set USJ_HTTP_API_KEY=clave-super-secreta
+fly secrets set USJ_HTTP_API_KEY=super-secret-key
 fly deploy
 ```
 
-Tras el despliegue, la URL pública (`https://<app>.fly.dev`) se puede usar
-directamente desde el cliente:
+After deployment, the public URL (`https://<app>.fly.dev`) can be used directly from the
+client:
 
 ```bash
 python -m usj_http.client \
   --url http://<app>.fly.dev/cats \
-  --api-key clave-super-secreta
+  --api-key super-secret-key
 ```
 
-## Despliegue real en Railway (producción)
+## Real deployment on Railway (production)
 
-El servidor está desplegado de forma permanente en [Railway](https://railway.app),
-que detecta el `Dockerfile` del repositorio y construye la imagen automáticamente en
-cada push a `main`. Railway expone el puerto del contenedor sobre HTTPS y asigna una
-URL pública estable:
+The server is permanently deployed on [Railway](https://railway.app), which detects the
+repository's `Dockerfile` and builds the image automatically on every push to `main`.
+Railway exposes the container port over HTTPS and assigns a stable public URL:
 
 **https://http-project-production.up.railway.app**
 
-Pasos seguidos:
+Steps followed:
 
-1. Crear un proyecto en Railway y enlazarlo al repositorio de GitHub.
-2. Railway detecta el `Dockerfile` y construye la imagen (no hace falta configuración extra).
-3. (Opcional) Definir la variable `USJ_HTTP_API_KEY` en el panel de variables del servicio.
-4. Cada `git push` a `main` redespliega automáticamente.
+1. Create a project on Railway and link it to the GitHub repository.
+2. Railway detects the `Dockerfile` and builds the image (no extra configuration needed).
+3. (Optional) Set the `USJ_HTTP_API_KEY` variable in the service's variables panel.
+4. Every `git push` to `main` redeploys automatically.
 
-## Comprobación
+## Verification
 
-Contra el despliegue real en producción:
+Against the real production deployment:
 
 ```bash
 curl https://http-project-production.up.railway.app/index.html
 curl https://http-project-production.up.railway.app/cats
 ```
 
-O contra una instancia local:
+Or against a local instance:
 
 ```bash
 curl http://<host>:8080/index.html
-curl -H "X-API-Key: clave-super-secreta" http://<host>:8080/cats
+curl -H "X-API-Key: super-secret-key" http://<host>:8080/cats
 ```
 
-Y en el log debe aparecer una línea por cada petición recibida.
+A log line should appear for every received request.

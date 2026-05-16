@@ -11,7 +11,7 @@ def _split_head_body(data: bytes) -> tuple[bytes, bytes]:
     marker = b"\r\n\r\n"
     idx = data.find(marker)
     if idx == -1:
-        raise HTTPParseError("No se encontró el final de cabeceras")
+        raise HTTPParseError("End of headers not found")
     return data[:idx], data[idx + len(marker):]
 
 
@@ -21,7 +21,7 @@ def parse_headers(lines: list[str]) -> Dict[str, str]:
         if not line:
             continue
         if ":" not in line:
-            raise HTTPParseError(f"Cabecera inválida: {line!r}")
+            raise HTTPParseError(f"Invalid header: {line!r}")
         name, value = line.split(":", 1)
         headers[name.strip()] = value.strip()
     return headers
@@ -31,15 +31,15 @@ def parse_request(data: bytes) -> Request:
     head, body = _split_head_body(data)
     lines = head.decode("iso-8859-1").split("\r\n")
     if not lines:
-        raise HTTPParseError("Petición vacía")
+        raise HTTPParseError("Empty request")
     try:
         method, target, version = lines[0].split(" ", 2)
     except ValueError as exc:
-        raise HTTPParseError("Línea de petición inválida") from exc
+        raise HTTPParseError("Invalid request line") from exc
     headers = parse_headers(lines[1:])
     content_length = int(headers.get("Content-Length", "0"))
     if len(body) != content_length:
-        raise HTTPParseError("El cuerpo no coincide con Content-Length")
+        raise HTTPParseError("Body does not match Content-Length")
     return Request(method=method.upper(), target=target, version=version, headers=headers, body=body)
 
 
@@ -49,14 +49,14 @@ def parse_response(data: bytes) -> Response:
     try:
         version, status_code, reason = lines[0].split(" ", 2)
     except ValueError as exc:
-        raise HTTPParseError("Línea de estado inválida") from exc
+        raise HTTPParseError("Invalid status line") from exc
     headers: dict[str, str] = {}
     set_cookies: list[str] = []
     for line in lines[1:]:
         if not line:
             continue
         if ":" not in line:
-            raise HTTPParseError(f"Cabecera inválida: {line!r}")
+            raise HTTPParseError(f"Invalid header: {line!r}")
         name, value = line.split(":", 1)
         name = name.strip()
         value = value.strip()
@@ -66,7 +66,7 @@ def parse_response(data: bytes) -> Response:
             headers[name] = value
     content_length = int(headers.get("Content-Length", "0"))
     if len(body) != content_length:
-        raise HTTPParseError("El cuerpo no coincide con Content-Length")
+        raise HTTPParseError("Body does not match Content-Length")
     return Response(
         version=version,
         status_code=int(status_code),
@@ -90,7 +90,7 @@ def recv_http_message(sock) -> bytes:
     marker = b"\r\n\r\n"
     idx = data.find(marker)
     if idx == -1:
-        raise HTTPParseError("No se recibieron cabeceras completas")
+        raise HTTPParseError("Complete headers were not received")
 
     head = data[:idx]
     rest = data[idx + len(marker):]

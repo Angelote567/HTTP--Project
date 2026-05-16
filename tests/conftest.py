@@ -26,7 +26,7 @@ def _wait_until_listening(host: str, port: int, timeout: float = 3.0) -> None:
                 return
         except OSError:
             time.sleep(0.05)
-    raise RuntimeError(f"El servidor no aceptó conexiones en {host}:{port}")
+    raise RuntimeError(f"The server did not accept connections on {host}:{port}")
 
 
 def _start_server(api_key: Optional[str] = None) -> tuple[server_module.ThreadingTCPServer, threading.Thread, str]:

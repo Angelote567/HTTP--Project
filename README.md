@@ -1,19 +1,20 @@
-# Proyecto HTTP de USJ — implementación en Python
+# USJ HTTP Project — Python implementation
 
-Implementación desde cero (solo sockets TCP) de cliente y servidor HTTP/1.1 para el grupo de cinco
-estudiantes. Sobre la base obligatoria se han añadido las siguientes **features opcionales**:
+From-scratch implementation (TCP sockets only) of an HTTP/1.1 client and server, built by a
+team of five students. On top of the mandatory base, the following **optional features**
+were added:
 
-| Feature                  | Puntos | Estado |
+| Feature                  | Points | Status |
 |--------------------------|--------|--------|
 | API key                  | +0.6   | ✅ |
 | Logging                  | +0.6   | ✅ |
-| Despliegue real          | +0.6   | ✅ |
+| Real deployment          | +0.6   | ✅ |
 | Cookies                  | +0.6   | ✅ |
-| CRUD avanzado            | +0.6   | ✅ |
-| Middleware/interceptores | +0.6   | ✅ |
-| Testing automático       | +1.2   | ✅ |
+| Advanced CRUD            | +0.6   | ✅ |
+| Middleware/interceptors  | +0.6   | ✅ |
+| Automated testing        | +1.2   | ✅ |
 
-## Equipo
+## Team
 
 - Ángel (@Angelote567)
 - Blanca
@@ -21,144 +22,145 @@ estudiantes. Sobre la base obligatoria se han añadido las siguientes **features
 - Jorge
 - Mario
 
-## Requisitos
+## Requirements
 
 - Python 3.11+
-- `pytest` para ejecutar los tests automáticos.
+- `pytest` to run the automated tests.
 
-## Ejecutar el servidor
+## Running the server
 
 ```bash
 python -m usj_http.server --host 127.0.0.1 --port 8080
 ```
 
-Argumentos disponibles:
+Available arguments:
 
-| Flag             | Descripción                                                              | Variable de entorno alternativa |
-|------------------|--------------------------------------------------------------------------|---------------------------------|
-| `--host`         | Host de escucha (por defecto `127.0.0.1`).                               | —                               |
-| `--port`         | Puerto de escucha (por defecto `8080`).                                  | —                               |
-| `--api-key`      | API key opcional. Si se define, las rutas no públicas requieren el header `X-API-Key`. | `USJ_HTTP_API_KEY`              |
-| `--log-file`     | Ruta del fichero de log (por defecto `logs/server.log`).                 | `USJ_HTTP_LOG_FILE`             |
-| `--log-level`    | Nivel de log (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                      | `USJ_HTTP_LOG_LEVEL`            |
+| Flag             | Description                                                                          | Alternative environment variable |
+|------------------|--------------------------------------------------------------------------------------|----------------------------------|
+| `--host`         | Listening host (default `127.0.0.1`).                                                | —                                |
+| `--port`         | Listening port (default `8080`).                                                     | —                                |
+| `--api-key`      | Optional API key. If set, non-public routes require the `X-API-Key` header.          | `USJ_HTTP_API_KEY`               |
+| `--log-file`     | Path to the log file (default `logs/server.log`).                                    | `USJ_HTTP_LOG_FILE`              |
+| `--log-level`    | Log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                                     | `USJ_HTTP_LOG_LEVEL`             |
 
-Ejemplo con todas las features activas:
+Example with all features enabled:
 
 ```bash
 python -m usj_http.server \
   --host 0.0.0.0 \
   --port 8080 \
-  --api-key clave-super-secreta \
+  --api-key super-secret-key \
   --log-file logs/server.log \
   --log-level DEBUG
 ```
 
-## Ejecutar el cliente
+## Running the client
 
-Modo CLI directo:
+Direct CLI mode:
 
 ```bash
 python -m usj_http.client --url http://127.0.0.1:8080/cats
 ```
 
-Modo interactivo (mantiene la cookie jar entre peticiones):
+Interactive mode (keeps the cookie jar between requests):
 
 ```bash
 python -m usj_http.client --interactive
 ```
 
-Si el servidor exige API key, se pasa con `--api-key` o por la variable `USJ_HTTP_API_KEY`.
+If the server requires an API key, pass it with `--api-key` or via the `USJ_HTTP_API_KEY`
+environment variable.
 
-## Endpoints expuestos
+## Exposed endpoints
 
-| Método | Ruta                       | Descripción                                                  |
-|--------|----------------------------|--------------------------------------------------------------|
-| GET    | `/` y `/index.html`        | Página estática.                                            |
-| GET    | `/cats`                    | Lista de gatos.                                              |
-| POST   | `/cats`                    | Alta de gato (admite `owner_id`).                            |
-| GET    | `/cats/:id`                | Obtener gato.                                                |
-| PUT    | `/cats/:id`                | Modificar gato.                                              |
-| DELETE | `/cats/:id`                | Borrar gato.                                                 |
-| GET    | `/owners`                  | Lista de owners (CRUD avanzado).                             |
-| POST   | `/owners`                  | Alta de owner.                                               |
-| GET    | `/owners/:id`              | Obtener owner.                                               |
-| PUT    | `/owners/:id`              | Modificar owner.                                             |
-| DELETE | `/owners/:id`              | Borrar owner. Borra también sus gatos en cascada.            |
-| GET    | `/owners/:id/cats`         | Listar gatos del owner (recurso anidado).                    |
-| GET    | `/session`                 | Crea/incrementa una sesión vía cookies.                      |
-| DELETE | `/session`                 | Cierra la sesión y expira la cookie.                         |
+| Method | Path                       | Description                                          |
+|--------|----------------------------|------------------------------------------------------|
+| GET    | `/` and `/index.html`      | Static page.                                         |
+| GET    | `/cats`                    | List of cats.                                        |
+| POST   | `/cats`                    | Create a cat (accepts `owner_id`).                   |
+| GET    | `/cats/:id`                | Get a cat.                                           |
+| PUT    | `/cats/:id`                | Update a cat.                                        |
+| DELETE | `/cats/:id`                | Delete a cat.                                        |
+| GET    | `/owners`                  | List of owners (advanced CRUD).                      |
+| POST   | `/owners`                  | Create an owner.                                     |
+| GET    | `/owners/:id`              | Get an owner.                                        |
+| PUT    | `/owners/:id`              | Update an owner.                                     |
+| DELETE | `/owners/:id`              | Delete an owner. Also cascade-deletes its cats.      |
+| GET    | `/owners/:id/cats`         | List the owner's cats (nested resource).             |
+| GET    | `/session`                 | Creates/increments a session via cookies.            |
+| DELETE | `/session`                 | Ends the session and expires the cookie.             |
 
-Ejemplos rápidos:
+Quick examples:
 
 ```bash
-# Página estática
+# Static page
 curl http://127.0.0.1:8080/
 
-# Listar gatos del owner 1 (recurso anidado)
+# List cats of owner 1 (nested resource)
 curl http://127.0.0.1:8080/owners/1/cats
 
-# Crear gato asociado a un owner
+# Create a cat linked to an owner
 curl -X POST http://127.0.0.1:8080/cats \
   -H "Content-Type: application/json" \
   -d '{"name":"Milo","breed":"Tabby","age":2,"owner_id":1}'
 
-# Petición autenticada con API key
-curl -H "X-API-Key: clave-super-secreta" http://127.0.0.1:8080/cats
+# Authenticated request with API key
+curl -H "X-API-Key: super-secret-key" http://127.0.0.1:8080/cats
 ```
 
-## Tests automáticos
+## Automated tests
 
 ```bash
 python -m pytest
 ```
 
-Cubren CRUD básico, recursos anidados, validación, status codes, cookies, API key y la cadena
-de middleware. Cada test arranca un servidor real en un puerto libre y le ataca con el cliente
-HTTP del propio proyecto.
+They cover basic CRUD, nested resources, validation, status codes, cookies, API key and the
+middleware chain. Each test starts a real server on a free port and hits it with the
+project's own HTTP client.
 
-## Despliegue
+## Deployment
 
-El servidor está desplegado en producción y accesible públicamente en:
+The server is deployed in production and publicly accessible at:
 
 **https://http-project-production.up.railway.app**
 
 ```bash
-# Página estática en producción
+# Static page in production
 curl https://http-project-production.up.railway.app/
 
-# API REST en producción
+# REST API in production
 curl https://http-project-production.up.railway.app/cats
 
-# Desde el propio cliente del proyecto
+# Using the project's own client
 python -m usj_http.client --url https://http-project-production.up.railway.app/cats
 ```
 
-Ver [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) para el detalle. Incluye `Dockerfile`,
-despliegue real en Railway, instrucciones para VPS con `systemd` y un ejemplo en Fly.io.
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the details. It covers the `Dockerfile`,
+the real deployment on Railway, instructions for a VPS with `systemd`, and a Fly.io example.
 
 ```bash
 docker build -t usj-http .
 docker run --rm -p 8080:8080 usj-http
 ```
 
-## Estructura del paquete
+## Package structure
 
 ```
 usj_http/
-├── auth.py             # Middleware de API key
-├── client.py           # Cliente HTTP con cookie jar
-├── cookies.py          # Helpers de Set-Cookie / Cookie y CookieJar
-├── http_messages.py    # Dataclasses Request/Response y helpers
-├── logging_config.py   # Configuración de logger + middleware de logs
-├── middleware.py       # Cadena de middleware/interceptores
-├── parser.py           # Parser de mensajes HTTP a partir de bytes
-├── server.py           # Servidor con routing y dispatcher
-├── store.py            # Stores en memoria (Cat / Owner / sesiones)
-└── static/             # Ficheros servidos estáticamente
+├── auth.py             # API key middleware
+├── client.py           # HTTP client with cookie jar
+├── cookies.py          # Set-Cookie / Cookie helpers and CookieJar
+├── http_messages.py    # Request/Response dataclasses and helpers
+├── logging_config.py   # Logger configuration + logging middleware
+├── middleware.py       # Middleware/interceptor chain
+├── parser.py           # HTTP message parser from raw bytes
+├── server.py           # Server with routing and dispatcher
+├── store.py            # In-memory stores (Cat / Owner / sessions)
+└── static/             # Statically served files
 ```
 
-## Limitaciones conocidas
+## Known limitations
 
-- No hay HTTPS/TLS (no se ha optado por esa feature).
-- Conexión cerrada tras cada respuesta (`Connection: close`).
-- Solo se parsean cuerpos con `Content-Length`, no `Transfer-Encoding: chunked`.
+- No HTTPS/TLS (that feature was not chosen).
+- The connection is closed after each response (`Connection: close`).
+- Only bodies with `Content-Length` are parsed, not `Transfer-Encoding: chunked`.

@@ -109,42 +109,42 @@ def parse_header_lines(raw_headers: str) -> Dict[str, str]:
         return headers
     for line in raw_headers.split(","):
         if ":" not in line:
-            raise ValueError(f"Cabecera inválida: {line!r}")
+            raise ValueError(f"Invalid header: {line!r}")
         key, value = line.split(":", 1)
         headers[key.strip()] = value.strip()
     return headers
 
 
 def interactive_loop(client: HTTPClient) -> None:
-    print("Cliente HTTP interactivo. Pulsa Enter en URL para salir.\n")
+    print("Interactive HTTP client. Press Enter on URL to exit.\n")
     while True:
-        url = input("URL (ej. http://127.0.0.1:8080/cats): ").strip()
+        url = input("URL (e.g. http://127.0.0.1:8080/cats): ").strip()
         if not url:
-            print("Saliendo...")
+            print("Exiting...")
             break
-        method = input("Método [GET/HEAD/POST/PUT/DELETE]: ").strip().upper() or "GET"
-        raw_headers = input("Cabeceras extra (formato K:V,K:V) o vacío: ").strip()
-        body_text = input("Body (vacío si no aplica): ").strip()
+        method = input("Method [GET/HEAD/POST/PUT/DELETE]: ").strip().upper() or "GET"
+        raw_headers = input("Extra headers (format K:V,K:V) or empty: ").strip()
+        body_text = input("Body (empty if not applicable): ").strip()
         try:
             headers = parse_header_lines(raw_headers)
             request, response = client.request(method, url, headers, body_text)
             print_exchange(request, response)
         except Exception as exc:
-            print(f"Error enviando la petición: {exc}")
+            print(f"Error sending the request: {exc}")
         print()
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Cliente HTTP/1.1 básico con sockets TCP")
-    parser.add_argument("--interactive", action="store_true", help="Modo interactivo")
-    parser.add_argument("--method", default="GET", help="Método HTTP")
-    parser.add_argument("--url", help="URL completa, por ejemplo http://127.0.0.1:8080/cats")
-    parser.add_argument("--headers", default="", help="Cabeceras extra K:V,K:V")
-    parser.add_argument("--body", default="", help="Cuerpo de la petición")
+    parser = argparse.ArgumentParser(description="Basic HTTP/1.1 client using TCP sockets")
+    parser.add_argument("--interactive", action="store_true", help="Interactive mode")
+    parser.add_argument("--method", default="GET", help="HTTP method")
+    parser.add_argument("--url", help="Full URL, e.g. http://127.0.0.1:8080/cats")
+    parser.add_argument("--headers", default="", help="Extra headers K:V,K:V")
+    parser.add_argument("--body", default="", help="Request body")
     parser.add_argument(
         "--api-key",
         default=os.environ.get("USJ_HTTP_API_KEY"),
-        help="API key. También por env USJ_HTTP_API_KEY.",
+        help="API key. Also via env USJ_HTTP_API_KEY.",
     )
     args = parser.parse_args()
 
@@ -155,7 +155,7 @@ def main() -> None:
         return
 
     if not args.url:
-        parser.error("Debes indicar --url o usar --interactive")
+        parser.error("You must provide --url or use --interactive")
 
     extra_headers = parse_header_lines(args.headers)
     request, response = client.request(args.method, args.url, extra_headers, args.body)
