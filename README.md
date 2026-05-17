@@ -135,8 +135,7 @@ curl https://http-project-production.up.railway.app/cats
 python -m usj_http.client --url https://http-project-production.up.railway.app/cats
 ```
 
-See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the details. It covers the `Dockerfile`,
-the real deployment on Railway, instructions for a VPS with `systemd`, and a Fly.io example.
+Build and run the container locally:
 
 ```bash
 docker build -t usj-http .
