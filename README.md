@@ -58,17 +58,12 @@ python -m pytest
 
 ## Deployment
 
-The server runs in production on Railway: https://http-project-production.up.railway.app
+The server runs in production on Railway, built from the `Dockerfile` in this repository:
+
+https://http-project-production.up.railway.app
 
 ```bash
 curl https://http-project-production.up.railway.app/cats
-```
-
-To run it with Docker locally:
-
-```bash
-docker build -t usj-http .
-docker run --rm -p 8080:8080 usj-http
 ```
 
 ## Known limitations
